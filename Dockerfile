@@ -17,7 +17,7 @@ RUN npm install
 
 # Variáveis padrão
 ENV PORT=3000
-ENV PLAYWRIGHT_BROWSERS_PATH=0
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # Rodar o app
 CMD ["npm", "start"]
