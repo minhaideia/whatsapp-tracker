@@ -26,6 +26,10 @@
     .offline {
       color: #FF0000;
     }
+    #last-seen {
+      margin-top: 10px;
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 <body>
@@ -33,6 +37,7 @@
   <div class="status offline" id="status">
     ⚪️ Offline
   </div>
+  <div id="last-seen"></div>
   <script>
     async function fetchStatus() {
       try {
@@ -42,14 +47,17 @@
         }
         const data = await response.json();
         const statusDiv = document.getElementById('status');
+        const lastSeenDiv = document.getElementById('last-seen');
         if (data.status === 'online') {
           statusDiv.classList.remove('offline');
           statusDiv.classList.add('online');
           statusDiv.textContent = '🟢 Online';
+          lastSeenDiv.textContent = 'Online agora';
         } else {
           statusDiv.classList.remove('online');
           statusDiv.classList.add('offline');
           statusDiv.textContent = '⚪️ Offline';
+          lastSeenDiv.textContent = `Última vez visto: ${data.lastSeen}`;
         }
       } catch (error) {
         console.error('Failed to fetch status:', error);

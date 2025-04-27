@@ -1,3 +1,4 @@
+let lastSeen = null;
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const express = require('express');
 const qrcode = require('qrcode');
@@ -15,6 +16,7 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
+    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   }
 });
@@ -52,10 +54,19 @@ app.get('/qr', async (req, res) => {
 
 // Endpoint para o status
 app.get('/status', (req, res) => {
-  res.json({ status: isLoggedIn ? 'online' : 'offline' });
+  res.json({ 
+    status: isLoggedIn ? 'online' : 'offline',
+    lastSeen: lastSeen
+  });
 });
 
 // Inicia o servidor
 app.listen(port, () => {
   console.log(`🌐 Servindo webapp em http://localhost:${port}`);
 });
+
+setInterval(() => {
+  if (!isLoggedIn) {
+    lastSeen = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  }
+}, 15000);
