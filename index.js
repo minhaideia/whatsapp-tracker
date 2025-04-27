@@ -1,6 +1,5 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
-const fetch = require('node-fetch'); // Importa o fetch para enviar ao Telegram
 
 const CONTACT_NAME = "Beatriz RM MDB"; // 👈 Ajuste aqui o nome correto do contato
 const TELEGRAM_TOKEN = '7548691102:AAH6nLWtiQT-UUqqtGrqWve3cHcCWc1aG_w';
