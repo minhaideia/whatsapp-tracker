@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="5"> <!-- Atualiza a cada 5s -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status de Monitoramento</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .status {
+      font-size: 2rem;
+      margin-top: 20px;
+    }
+    .online {
+      color: #00FF00;
+    }
+    .offline {
+      color: #FF0000;
+    }
+  </style>
+</head>
+<body>
+  <h1>Status de Monitoramento</h1>
+  <div class="status offline" id="status">
+    ⚪️ Offline
+  </div>
+</body>
+</html>
