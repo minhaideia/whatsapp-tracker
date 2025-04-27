@@ -1,65 +1,61 @@
-const { chromium } = require('playwright');
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const express = require('express');
+const qrcode = require('qrcode');
 const fs = require('fs');
+const path = require('path');
 
-const CONTACT_NAME = "Beatriz RM MDB"; // 👈 Ajuste aqui o nome correto do contato
+const app = express();
+const port = process.env.PORT || 3000;
 
-async function sendTelegramMessage(text) {
-  const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: TELEGRAM_CHAT_ID,
-      text: text
-    })
-  });
-}
+let qrCodeData = null;
+let isLoggedIn = false;
 
-(async () => {
-  const browser = await chromium.launch({ headless: true }); // visível para debug
-  const context = await browser.newContext({
-    storageState: 'whatsapp-session.json' // agora usamos a sessão salva!
-  });
-  const page = await context.newPage();
-  await page.goto('https://web.whatsapp.com');
-
-  console.log('⏳ Carregando WhatsApp Web e monitorando contato:', CONTACT_NAME);
-
-  await page.waitForTimeout(15000); // aguarda carregamento do WhatsApp Web
-
-  try {
-    await page.waitForSelector(`span[title="${CONTACT_NAME}"]`, { timeout: 30000 });
-    await page.click(`span[title="${CONTACT_NAME}"]`);
-    await page.waitForTimeout(3000);
-  } catch (error) {
-    console.error('❌ Erro ao clicar no contato na lista inicial:', error);
-    await browser.close();
-    return;
+// Inicia o cliente WhatsApp com sessão salva automaticamente
+const client = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   }
+});
 
-  while (true) {
-    try {
-      if (!page.isClosed()) {
-        const isOnline = await page.$('span[title="online"]');
-        const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-        const formattedTime = now.toISOString().replace('T', ' ').substring(0, 19);
+client.on('qr', (qr) => {
+  console.log('🔵 QR gerado. Escaneie para login.');
+  qrCodeData = qr;
+});
 
-        if (isOnline) {
-          console.log(`🟢 ONLINE - ${formattedTime}`);
-        } else {
-          console.log(`⚪ OFFLINE - ${formattedTime}`);
-        }
+client.on('ready', () => {
+  console.log('✅ Cliente WhatsApp pronto!');
+  isLoggedIn = true;
+  qrCodeData = null;
+});
 
-        await page.waitForTimeout(1000); // Atualiza a cada 1 segundo
-      } else {
-        console.error('🚨 Página fechada. Encerrando monitoramento.');
-        break;
-      }
-    } catch (error) {
-      console.error('❌ Erro no monitoramento:', error);
-      break;
-    }
+client.on('auth_failure', (msg) => {
+  console.error('❌ Falha na autenticação:', msg);
+  isLoggedIn = false;
+});
+
+client.initialize();
+
+// Servir a pasta public
+app.use(express.static('public'));
+
+// Endpoint para ver o QR Code
+app.get('/qr', async (req, res) => {
+  if (qrCodeData) {
+    const qrImage = await qrcode.toDataURL(qrCodeData);
+    res.send(`<html><body style="background:black; display:flex; align-items:center; justify-content:center; height:100vh;"><img src="${qrImage}" /></body></html>`);
+  } else {
+    res.send('<html><body style="background:black; color:white; display:flex; align-items:center; justify-content:center; height:100vh;"><h1>✅ Já logado!</h1></body></html>');
   }
+});
 
-  await browser.close();
-})();
+// Endpoint para o status
+app.get('/status', (req, res) => {
+  res.json({ status: isLoggedIn ? 'online' : 'offline' });
+});
+
+// Inicia o servidor
+app.listen(port, () => {
+  console.log(`🌐 Servindo webapp em http://localhost:${port}`);
+});

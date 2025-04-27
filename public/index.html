@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="5"> <!-- Atualiza a cada 5s -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Status de Monitoramento</title>
   <style>
@@ -34,5 +33,31 @@
   <div class="status offline" id="status">
     ⚪️ Offline
   </div>
+  <script>
+    async function fetchStatus() {
+      try {
+        const response = await fetch('/status');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        const statusDiv = document.getElementById('status');
+        if (data.status === 'online') {
+          statusDiv.classList.remove('offline');
+          statusDiv.classList.add('online');
+          statusDiv.textContent = '🟢 Online';
+        } else {
+          statusDiv.classList.remove('online');
+          statusDiv.classList.add('offline');
+          statusDiv.textContent = '⚪️ Offline';
+        }
+      } catch (error) {
+        console.error('Failed to fetch status:', error);
+      }
+    }
+
+    fetchStatus();
+    setInterval(fetchStatus, 5000);
+  </script>
 </body>
 </html>
