@@ -2,8 +2,6 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 
 const CONTACT_NAME = "Beatriz RM MDB"; // 👈 Ajuste aqui o nome correto do contato
-const TELEGRAM_TOKEN = '7548691102:AAH6nLWtiQT-UUqqtGrqWve3cHcCWc1aG_w';
-const TELEGRAM_CHAT_ID = '7849408975';
 
 async function sendTelegramMessage(text) {
   const url = `https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`;
@@ -18,7 +16,7 @@ async function sendTelegramMessage(text) {
 }
 
 (async () => {
-  const browser = await chromium.launch({ headless: false }); // visível para debug
+  const browser = await chromium.launch({ headless: true }); // visível para debug
   const context = await browser.newContext({
     storageState: 'whatsapp-session.json' // agora usamos a sessão salva!
   });
