@@ -1,5 +1,5 @@
 # Usar imagem oficial Playwright já com Chromium
-FROM mcr.microsoft.com/playwright:v1.43.0-jammy
+FROM mcr.microsoft.com/playwright:v1.52.0-jammy
 
 # Criar diretório de trabalho
 WORKDIR /app
