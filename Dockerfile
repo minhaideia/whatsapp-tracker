@@ -10,7 +10,7 @@ COPY index.js .
 COPY whatsapp-session.json .
 
 # INSTALAR BROWSERS PLAYWRIGHT 🚀
-RUN npx playwright install chromium
+RUN npx playwright install
 
 # Instalar dependências
 RUN npm install
