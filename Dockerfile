@@ -9,6 +9,9 @@ COPY package.json package-lock.json* ./
 COPY index.js .
 COPY whatsapp-session.json .
 
+# INSTALAR BROWSERS PLAYWRIGHT 🚀
+RUN npx playwright install chromium
+
 # Instalar dependências
 RUN npm install
 
