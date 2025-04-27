@@ -1,0 +1,14 @@
+{
+  "name": "whatsapp-tracker",
+  "version": "1.0.0",
+  "description": "Bot para monitorar status online do WhatsApp Web",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Pedro Tardivo",
+  "license": "MIT",
+  "dependencies": {
+    "playwright": "^1.43.0"
+  }
+}
