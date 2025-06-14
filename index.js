@@ -33,6 +33,12 @@ if (fs.existsSync(historyFile)) {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ao acessar /monitorar, servir a página HTML principal
+app.get('/monitorar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+
 app.listen(port, () => {
   console.log(`\uD83C\uDF10 Servindo webapp em http://localhost:${port}`);
 });
@@ -80,6 +86,17 @@ app.get('/status', (req, res) => {
     monitorando: contactToMonitor || 'nenhum contato',
     botName: 'WhatsTracker Bot',
     contactName: contactToMonitor ? contactToMonitor.split('@')[0] : 'N/A'
+  });
+});
+
+// API simples que retorna apenas o histórico de presenças
+app.get('/api/presence', (req, res) => {
+  res.json({
+    botStatus: isLoggedIn ? 'online' : 'offline',
+    contact: contactToMonitor,
+    contactStatus: contactToMonitor ? (isContactOnline ? 'online' : 'offline') : 'nenhum contato',
+    history: lastSeenContact
+
   });
 });
 

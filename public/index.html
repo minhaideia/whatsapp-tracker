@@ -58,17 +58,20 @@ async function monitorar() {
   });
 }
 async function atualizar() {
-  const res = await fetch('/status');
+  const res = await fetch('/api/presence');
+
   const data = await res.json();
   const botDiv = document.getElementById('bot-status');
   const contatoDiv = document.getElementById('contato-status');
   const hist = document.getElementById('historico');
   botDiv.textContent = `Bot ${data.botStatus}`;
   botDiv.className = `status ${data.botStatus === 'online' ? 'online' : 'offline'}`;
-  if (data.monitorando !== 'nenhum contato') {
-    contatoDiv.textContent = `${data.monitorando.replace('@s.whatsapp.net','')}: ${data.contactStatus}`;
+  if (data.contact) {
+    const number = data.contact.replace('@s.whatsapp.net', '');
+    contatoDiv.textContent = `${number}: ${data.contactStatus}`;
     contatoDiv.className = `status ${data.contactStatus === 'online' ? 'online' : 'offline'}`;
-    hist.innerHTML = data.lastSeenContact.map(ls => `<li>${ls}</li>`).join('');
+    hist.innerHTML = data.history.map(ls => `<li>${ls}</li>`).join('');
+
   }
 }
 setInterval(atualizar, 5000);
