@@ -12,19 +12,31 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 let socket;
+let qrData = '';
+
+const presenceState = {
+  botStatus: 'offline',
+  contact: null,
+  contactStatus: null,
+  history: []
+};
+
 let isLoggedIn = false;
 let contactToMonitor = null;
 let isContactOnline = false;
-let lastSeenContact = [];
 let lastSeenBot = null;
-let qrData = '';
+let lastSeenContact = [];
+
 
 // carrega histórico salvo (se existir)
 if (fs.existsSync(historyFile)) {
   try {
     const data = JSON.parse(fs.readFileSync(historyFile));
-    contactToMonitor = data.contact || null;
-    lastSeenContact = Array.isArray(data.history) ? data.history : [];
+    presenceState.contact = data.contact || null;
+    presenceState.history = Array.isArray(data.history) ? data.history : [];
+    contactToMonitor = presenceState.contact;
+    lastSeenContact = presenceState.history;
+
   } catch (e) {
     console.error('Erro ao ler histórico salvo', e);
   }
@@ -38,10 +50,10 @@ app.get('/monitorar', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
 app.listen(port, () => {
   console.log(`\uD83C\uDF10 Servindo webapp em http://localhost:${port}`);
 });
+
 
 app.get('/qr', async (req, res) => {
   if (qrData) {
@@ -53,7 +65,8 @@ app.get('/qr', async (req, res) => {
 });
 
 app.post('/monitorar', async (req, res) => {
-  if (!isLoggedIn) {
+  if (presenceState.botStatus !== 'open') {
+
     console.log('❌ Tentativa de monitorar contato antes do login do bot.');
     return res.status(400).send('Erro: Bot ainda não está logado no WhatsApp.');
   }
@@ -65,6 +78,10 @@ app.post('/monitorar', async (req, res) => {
   }
 
   contactToMonitor = `${nomeOuTelefone}@s.whatsapp.net`;
+  presenceState.contact = contactToMonitor;
+  presenceState.contactStatus = null;
+  presenceState.history = [];
+
   isContactOnline = false;
   lastSeenContact = [];
   try {
@@ -79,25 +96,19 @@ app.post('/monitorar', async (req, res) => {
 
 app.get('/status', (req, res) => {
   res.json({
-    botStatus: isLoggedIn ? 'online' : 'offline',
-    contactStatus: contactToMonitor ? (isContactOnline ? 'online' : 'offline') : 'nenhum contato configurado',
-    lastSeenBot: lastSeenBot,
-    lastSeenContact: lastSeenContact,
-    monitorando: contactToMonitor || 'nenhum contato',
-    botName: 'WhatsTracker Bot',
-    contactName: contactToMonitor ? contactToMonitor.split('@')[0] : 'N/A'
+    botStatus: presenceState.botStatus,
+    contact: presenceState.contact,
+    contactStatus: presenceState.contactStatus,
+    history: presenceState.history,
+    botName: 'WhatsTracker Bot'
+
   });
 });
 
 // API simples que retorna apenas o histórico de presenças
 app.get('/api/presence', (req, res) => {
-  res.json({
-    botStatus: isLoggedIn ? 'online' : 'offline',
-    contact: contactToMonitor,
-    contactStatus: contactToMonitor ? (isContactOnline ? 'online' : 'offline') : 'nenhum contato',
-    history: lastSeenContact
+  res.json(presenceState);
 
-  });
 });
 
 setInterval(() => {
@@ -118,6 +129,11 @@ async function startBot() {
   socket.ev.on('connection.update', (update) => {
     const { connection, lastDisconnect, qr } = update;
 
+    if (connection) {
+      presenceState.botStatus = connection;
+    }
+
+
     if (qr) {
       qrData = qr;
       qrcodeTerminal.generate(qr, { small: true });
@@ -127,6 +143,8 @@ async function startBot() {
     if (connection === 'open') {
       console.log('✅ Conectado ao WhatsApp!');
       isLoggedIn = true;
+      presenceState.botStatus = 'open';
+
       qrData = '';
     }
 
@@ -138,6 +156,8 @@ async function startBot() {
         startBot();
       } else {
         isLoggedIn = false;
+        presenceState.botStatus = 'close';
+
         console.log('⚠️ Bot desconectado. Reinicie para novo login.');
       }
     }
@@ -151,13 +171,21 @@ async function startBot() {
       if (presence === 'available' || presence === 'composing' || presence === 'recording') {
         if (!isContactOnline) {
           console.log(`🟢 ${id} está ONLINE`);
+          const seen = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          presenceState.history.push(`${seen} – online`);
+          if (presenceState.history.length > 10) presenceState.history.shift();
         }
         isContactOnline = true;
+        presenceState.contactStatus = 'available';
+
       } else if (presence === 'unavailable') {
         if (isContactOnline) {
           const lastSeen = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
           lastSeenContact.push(lastSeen);
+          presenceState.history.push(`${lastSeen} – offline`);
           if (lastSeenContact.length > 10) lastSeenContact.shift();
+          if (presenceState.history.length > 10) presenceState.history.shift();
+
           // salva historico em arquivo
           try {
             fs.writeFileSync(historyFile, JSON.stringify({
@@ -170,6 +198,8 @@ async function startBot() {
           console.log(`⚪️ ${id} ficou OFFLINE às ${lastSeen}`);
         }
         isContactOnline = false;
+        presenceState.contactStatus = 'unavailable';
+
       }
     }
   });
