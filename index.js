@@ -27,6 +27,7 @@ let isContactOnline = false;
 let lastSeenBot = null;
 let lastSeenContact = [];
 
+
 // carrega histórico salvo (se existir)
 if (fs.existsSync(historyFile)) {
   try {
@@ -35,6 +36,7 @@ if (fs.existsSync(historyFile)) {
     presenceState.history = Array.isArray(data.history) ? data.history : [];
     contactToMonitor = presenceState.contact;
     lastSeenContact = presenceState.history;
+
   } catch (e) {
     console.error('Erro ao ler histórico salvo', e);
   }
@@ -52,6 +54,7 @@ app.listen(port, () => {
   console.log(`\uD83C\uDF10 Servindo webapp em http://localhost:${port}`);
 });
 
+
 app.get('/qr', async (req, res) => {
   if (qrData) {
     const qrImage = await qrcode.toDataURL(qrData);
@@ -63,6 +66,7 @@ app.get('/qr', async (req, res) => {
 
 app.post('/monitorar', async (req, res) => {
   if (presenceState.botStatus !== 'open') {
+
     console.log('❌ Tentativa de monitorar contato antes do login do bot.');
     return res.status(400).send('Erro: Bot ainda não está logado no WhatsApp.');
   }
@@ -77,6 +81,7 @@ app.post('/monitorar', async (req, res) => {
   presenceState.contact = contactToMonitor;
   presenceState.contactStatus = null;
   presenceState.history = [];
+
   isContactOnline = false;
   lastSeenContact = [];
   try {
@@ -96,12 +101,14 @@ app.get('/status', (req, res) => {
     contactStatus: presenceState.contactStatus,
     history: presenceState.history,
     botName: 'WhatsTracker Bot'
+
   });
 });
 
 // API simples que retorna apenas o histórico de presenças
 app.get('/api/presence', (req, res) => {
   res.json(presenceState);
+
 });
 
 setInterval(() => {
@@ -126,6 +133,7 @@ async function startBot() {
       presenceState.botStatus = connection;
     }
 
+
     if (qr) {
       qrData = qr;
       qrcodeTerminal.generate(qr, { small: true });
@@ -142,6 +150,7 @@ async function startBot() {
           .then(() => console.log(`🔎 Re-subscrito para ${contactToMonitor}`))
           .catch(err => console.error('Erro ao resubscrever presença', err));
       }
+
     }
 
     if (connection === 'close') {
@@ -153,6 +162,7 @@ async function startBot() {
       } else {
         isLoggedIn = false;
         presenceState.botStatus = 'close';
+
         console.log('⚠️ Bot desconectado. Reinicie para novo login.');
       }
     }
@@ -173,6 +183,7 @@ async function startBot() {
         }
         isContactOnline = true;
         presenceState.contactStatus = 'available';
+
       } else if (presence === 'unavailable') {
         if (isContactOnline) {
           const lastSeen = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
@@ -181,6 +192,7 @@ async function startBot() {
           if (lastSeenContact.length > 10) lastSeenContact.shift();
           if (presenceState.history.length > 10) presenceState.history.shift();
           console.log(presenceState.history);
+
           // salva historico em arquivo
           try {
             fs.writeFileSync(historyFile, JSON.stringify({
@@ -194,6 +206,7 @@ async function startBot() {
         }
         isContactOnline = false;
         presenceState.contactStatus = 'unavailable';
+
       }
     }
   });
