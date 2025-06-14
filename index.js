@@ -144,8 +144,13 @@ async function startBot() {
       console.log('✅ Conectado ao WhatsApp!');
       isLoggedIn = true;
       presenceState.botStatus = 'open';
-
       qrData = '';
+      if (contactToMonitor) {
+        socket.presenceSubscribe(contactToMonitor)
+          .then(() => console.log(`🔎 Re-subscrito para ${contactToMonitor}`))
+          .catch(err => console.error('Erro ao resubscrever presença', err));
+      }
+
     }
 
     if (connection === 'close') {
@@ -174,6 +179,7 @@ async function startBot() {
           const seen = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
           presenceState.history.push(`${seen} – online`);
           if (presenceState.history.length > 10) presenceState.history.shift();
+          console.log(presenceState.history);
         }
         isContactOnline = true;
         presenceState.contactStatus = 'available';
@@ -185,6 +191,7 @@ async function startBot() {
           presenceState.history.push(`${lastSeen} – offline`);
           if (lastSeenContact.length > 10) lastSeenContact.shift();
           if (presenceState.history.length > 10) presenceState.history.shift();
+          console.log(presenceState.history);
 
           // salva historico em arquivo
           try {
