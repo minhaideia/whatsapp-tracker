@@ -12,19 +12,29 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 let socket;
+let qrData = '';
+
+const presenceState = {
+  botStatus: 'offline',
+  contact: null,
+  contactStatus: null,
+  history: []
+};
+
 let isLoggedIn = false;
 let contactToMonitor = null;
 let isContactOnline = false;
-let lastSeenContact = [];
 let lastSeenBot = null;
-let qrData = '';
+let lastSeenContact = [];
 
 // carrega histórico salvo (se existir)
 if (fs.existsSync(historyFile)) {
   try {
     const data = JSON.parse(fs.readFileSync(historyFile));
-    contactToMonitor = data.contact || null;
-    lastSeenContact = Array.isArray(data.history) ? data.history : [];
+    presenceState.contact = data.contact || null;
+    presenceState.history = Array.isArray(data.history) ? data.history : [];
+    contactToMonitor = presenceState.contact;
+    lastSeenContact = presenceState.history;
   } catch (e) {
     console.error('Erro ao ler histórico salvo', e);
   }
@@ -39,21 +49,30 @@ app.get('/monitorar', (req, res) => {
 });
 
 
-app.listen(port, () => {
-  console.log(`\uD83C\uDF10 Servindo webapp em http://localhost:${port}`);
-});
-
-app.get('/qr', async (req, res) => {
-  if (qrData) {
-    const qrImage = await qrcode.toDataURL(qrData);
-    res.send(`<html><body style="background:black; display:flex; align-items:center; justify-content:center; height:100vh;"><img src="${qrImage}" /></body></html>`);
-  } else {
-    res.send('<html><body style="background:black; color:white; display:flex; align-items:center; justify-content:center; height:100vh;"><h1>✅ Já logado!</h1></body></html>');
-  }
-});
-
-app.post('/monitorar', async (req, res) => {
+  if (presenceState.botStatus !== 'open') {
+  presenceState.contact = contactToMonitor;
+  presenceState.contactStatus = null;
+  presenceState.history = [];
+    botStatus: presenceState.botStatus,
+    contact: presenceState.contact,
+    contactStatus: presenceState.contactStatus,
+    history: presenceState.history,
+    botName: 'WhatsTracker Bot'
+  res.json(presenceState);
   if (!isLoggedIn) {
+    if (connection) {
+      presenceState.botStatus = connection;
+    }
+
+      presenceState.botStatus = 'open';
+        presenceState.botStatus = 'close';
+          const seen = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+          presenceState.history.push(`${seen} – online`);
+          if (presenceState.history.length > 10) presenceState.history.shift();
+        presenceState.contactStatus = 'available';
+          presenceState.history.push(`${lastSeen} – offline`);
+          if (presenceState.history.length > 10) presenceState.history.shift();
+        presenceState.contactStatus = 'unavailable';
     console.log('❌ Tentativa de monitorar contato antes do login do bot.');
     return res.status(400).send('Erro: Bot ainda não está logado no WhatsApp.');
   }

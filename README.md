@@ -8,13 +8,15 @@ Monitore o status online de um contato do WhatsApp usando a biblioteca Baileys.
 npm install
 ```
 
+Em seguida execute `npm start` para iniciar o servidor.
+
 ## Uso
 
 1. Execute `npm start` ou `node index.js`.
 2. Abra `http://localhost:3000/qr` e escaneie o código QR exibido.
 3. Visite `http://localhost:3000/monitorar` para informar o número a ser monitorado (ou acesse via `GET /monitorar`).
 
-4. A interface exibirá o status do bot e do contato em tempo real.
+- `GET /api/presence` – retorna o estado atual do bot e do contato monitorado.
 
 ### Endpoints
 

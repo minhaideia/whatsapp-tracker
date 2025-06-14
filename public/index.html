@@ -59,9 +59,10 @@ async function monitorar() {
 }
 async function atualizar() {
   const res = await fetch('/api/presence');
-
-  const data = await res.json();
-  const botDiv = document.getElementById('bot-status');
+  botDiv.className = `status ${data.botStatus === 'open' ? 'online' : 'offline'}`;
+    const status = data.contactStatus === 'available' ? 'online' : 'offline';
+    contatoDiv.textContent = `${number}: ${status}`;
+    contatoDiv.className = `status ${status === 'online' ? 'online' : 'offline'}`;
   const contatoDiv = document.getElementById('contato-status');
   const hist = document.getElementById('historico');
   botDiv.textContent = `Bot ${data.botStatus}`;
