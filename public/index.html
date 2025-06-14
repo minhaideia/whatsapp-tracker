@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Status de Monitoramento</title>
+  <title>WhatsTracker</title>
   <style>
     body {
       background-color: black;
@@ -11,13 +11,18 @@
       font-family: monospace;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
-      text-align: center;
+      padding-top: 30px;
+    }
+    input {
+      padding: 5px;
+      margin-right: 5px;
+    }
+    button {
+      padding: 5px 10px;
     }
     .status {
-      font-size: 2rem;
+      font-size: 1.5rem;
       margin-top: 20px;
     }
     .online {
@@ -26,46 +31,49 @@
     .offline {
       color: #FF0000;
     }
-    #last-seen {
+    #historico {
       margin-top: 10px;
-      font-size: 1.2rem;
+      list-style: none;
+      padding: 0;
     }
   </style>
 </head>
 <body>
-  <h1>Status de Monitoramento</h1>
-  <div class="status offline" id="status">
-    ⚪️ Offline
+  <h1>WhatsTracker</h1>
+  <p>Escaneie o <a href="/qr" target="_blank">QR Code</a> para conectar.</p>
+  <div>
+    <input id="contato" type="text" placeholder="Número com DDI" />
+    <button onclick="monitorar()">Monitorar</button>
   </div>
-  <div id="last-seen"></div>
-  <script>
-    async function fetchStatus() {
-      try {
-        const response = await fetch('/status');
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        const data = await response.json();
-        const statusDiv = document.getElementById('status');
-        const lastSeenDiv = document.getElementById('last-seen');
-        if (data.status === 'online') {
-          statusDiv.classList.remove('offline');
-          statusDiv.classList.add('online');
-          statusDiv.textContent = '🟢 Online';
-          lastSeenDiv.textContent = 'Online agora';
-        } else {
-          statusDiv.classList.remove('online');
-          statusDiv.classList.add('offline');
-          statusDiv.textContent = '⚪️ Offline';
-          lastSeenDiv.textContent = `Última vez visto: ${data.lastSeen}`;
-        }
-      } catch (error) {
-        console.error('Failed to fetch status:', error);
-      }
-    }
-
-    fetchStatus();
-    setInterval(fetchStatus, 5000);
-  </script>
+  <div class="status offline" id="bot-status">Bot offline</div>
+  <div class="status" id="contato-status"></div>
+  <ul id="historico"></ul>
+<script>
+async function monitorar() {
+  const contato = document.getElementById('contato').value;
+  await fetch('/monitorar', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nomeOuTelefone: contato })
+  });
+}
+async function atualizar() {
+  const res = await fetch('/api/presence');
+  const data = await res.json();
+  const botDiv = document.getElementById('bot-status');
+  const contatoDiv = document.getElementById('contato-status');
+  const hist = document.getElementById('historico');
+  botDiv.textContent = `Bot ${data.botStatus}`;
+  botDiv.className = `status ${data.botStatus === 'online' ? 'online' : 'offline'}`;
+  if (data.contact) {
+    const number = data.contact.replace('@s.whatsapp.net', '');
+    contatoDiv.textContent = `${number}: ${data.contactStatus}`;
+    contatoDiv.className = `status ${data.contactStatus === 'online' ? 'online' : 'offline'}`;
+    hist.innerHTML = data.history.map(ls => `<li>${ls}</li>`).join('');
+  }
+}
+setInterval(atualizar, 5000);
+</script>
 </body>
 </html>
+

@@ -10,10 +10,8 @@
   "license": "MIT",
   "dependencies": {
     "express": "^5.1.0",
-    "playwright": "^1.52.0",
-    "puppeteer": "^24.7.2",
     "qrcode": "^1.5.4",
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.27.0"
+    "@whiskeysockets/baileys": "^6.7.0"
   }
 }
