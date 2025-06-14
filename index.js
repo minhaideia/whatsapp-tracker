@@ -38,6 +38,7 @@ app.get('/monitorar', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+
 app.listen(port, () => {
   console.log(`\uD83C\uDF10 Servindo webapp em http://localhost:${port}`);
 });
@@ -95,6 +96,7 @@ app.get('/api/presence', (req, res) => {
     contact: contactToMonitor,
     contactStatus: contactToMonitor ? (isContactOnline ? 'online' : 'offline') : 'nenhum contato',
     history: lastSeenContact
+
   });
 });
 
